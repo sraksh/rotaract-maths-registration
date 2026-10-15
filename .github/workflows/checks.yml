@@ -1,4 +1,4 @@
-name: Check and deploy (GitHub Pages)
+name: Checks (lint, type-check, build)
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: pages-${{ github.ref }}
+  group: checks-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -21,8 +21,8 @@ jobs:
       # PUBLIC values only. Set them under Settings → Secrets and variables → Actions → Variables.
       VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
       VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
-      # https://<owner>.github.io/<repo>/  →  base path "/<repo>/"
-      VITE_BASE_PATH: /${{ github.event.repository.name }}/
+      # Hosted on Netlify at the site root. (For a GitHub Pages project site use /<repo>/.)
+      VITE_BASE_PATH: /
     steps:
       - uses: actions/checkout@v4
 
@@ -44,25 +44,3 @@ jobs:
         run: npm run typecheck
       - name: Build static site
         run: npm run build
-
-      - name: Upload Pages artifact
-        if: github.event_name != 'pull_request'
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
-  deploy:
-    name: Deploy to GitHub Pages
-    # Runs only if every check above passed.
-    needs: check
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4

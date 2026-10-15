@@ -20,8 +20,9 @@ Tick everything before turning registration on. The Settings page also lists mis
 - [ ] Edge Functions deployed: `register`, `admin`, `cleanup`
 - [ ] Hourly cleanup scheduled
 - [ ] Admin users created and added to `admin_users`
-- [ ] GitHub repo created; Pages source set to GitHub Actions; repo Variables `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` added
-- [ ] Hosting decision made after reading the “Is GitHub Pages appropriate?” section of the README
+- [ ] GitHub repo created and code pushed
+- [ ] Netlify site connected to the repo; env vars `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` set; deploy succeeded
+- [ ] `ALLOWED_ORIGINS` secret set to the Netlify site's origin
 
 ## Dry run (staging or production with registration still closed → then open briefly)
 - [ ] Register one student in each of Class 7, 8, 9, 10 on a real phone; check the confirmation shows the right shift and reporting time

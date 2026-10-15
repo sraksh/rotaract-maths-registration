@@ -13,7 +13,7 @@ Browser (static site)                      Supabase (separate managed services)
 ┌───────────────────────┐   anon key      ┌────────────────────────────────────────────┐
 │ React + Vite, hash    │ ─────────────▶  │ PostgreSQL   RLS on, NO table access for   │
 │ routing (#/admin …)   │  get_public_    │              browser roles; data only via  │
-│ GitHub Pages or any   │  config() only  │              service-role-only SQL funcs   │
+│ Netlify (static)      │  config() only  │              service-role-only SQL funcs   │
 │ static host           │                 │ Edge Functions  register · admin · cleanup │
 │                       │ ─ fetch ──────▶ │ Storage      payment-proofs (PRIVATE)      │
 └───────────────────────┘                 │              payment-qr (public, QR only)  │
@@ -21,7 +21,7 @@ Browser (static site)                      Supabase (separate managed services)
                                           └────────────────────────────────────────────┘
 ```
 
-**GitHub Pages hosts only the static frontend.** The database, authentication, file storage and all privileged logic live in Supabase. No server code runs on Pages.
+**Netlify (or any static host) serves only the static frontend.** The database, authentication, file storage and all privileged logic live in Supabase. No server code runs on the static host.
 
 - The browser holds only the **publishable** key. The service-role key exists only inside Supabase Edge Functions (injected by the platform). The build refuses to run with a secret key (`src/lib/env.ts`) and CI fails on one.
 - The browser can call exactly one database function (`get_public_config`, public event settings). Every other table/function is revoked from `anon`/`authenticated`; RLS is enabled with no policies as a second layer.
@@ -58,7 +58,7 @@ Install the [Supabase CLI](https://supabase.com/docs/guides/cli), then:
 4. **Secrets**
    ```bash
    supabase secrets set \
-     ALLOWED_ORIGINS="https://sraksh.github.io" \
+     ALLOWED_ORIGINS="https://<your-site>.netlify.app" \
      IP_HASH_SALT="$(openssl rand -hex 32)" \
      CLEANUP_SECRET="$(openssl rand -hex 32)"
    ```
@@ -90,33 +90,29 @@ Nobody can become an admin from the public app. For each organiser:
 
 A signed-in user who is not in `admin_users` sees “Not authorised”, and the functions reject them with 403.
 
-## GitHub repository and deployment
+## GitHub repository and deployment (Netlify)
 
-Repository owner: **sraksh**. Suggested repo name: `rungta-registration` (the workflow derives the Vite base path from the repo name, so a different name also works).
+The site is hosted on **Netlify** (static site); the code lives on GitHub (owner **sraksh**). `.github/workflows/checks.yml` runs lint, type-check and build on every push/PR; `netlify.toml` configures the Netlify build.
 
-```bash
-git init -b main && git add -A && git commit -m "Initial commit"      # see .gitignore; no secrets are tracked
-gh repo create sraksh/rungta-registration --private --source=. --push  # or create it in the browser
-```
+1. **Push to GitHub** (from a computer logged in to your account):
+   ```bash
+   gh repo create sraksh/rungta-registration --private --source=. --push
+   ```
+   (Netlify works with private repos. GitHub Pages is no longer used.)
+2. **Netlify → Add new site → Import an existing project → GitHub →** pick the repo. Build command `npm run build`, publish directory `dist` (already in `netlify.toml`).
+3. **Netlify → Site configuration → Environment variables:** add `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (public values; never the secret key). Trigger a deploy.
+4. Take the resulting site origin (e.g. `https://<name>.netlify.app`, or your custom domain) and set it as the Supabase secret `ALLOWED_ORIGINS`:
+   ```bash
+   supabase secrets set ALLOWED_ORIGINS="https://<name>.netlify.app"
+   ```
+   Without this, the browser's calls to the functions are blocked by CORS.
+5. Optionally add the same two variables under GitHub → Settings → Secrets and variables → Actions → *Variables* so the CI build step uses real values.
 
-Then in the GitHub repo:
+Hash routing (`#/admin`) means reloads and deep links work with no rewrite rules.
 
-1. **Settings → Pages → Build and deployment → Source: GitHub Actions.**
-2. **Settings → Secrets and variables → Actions → *Variables*:** add `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (public values; never the secret key).
-3. Push to `main`. `.github/workflows/deploy.yml` runs lint → type-check → build and deploys only if they pass. The site will then be at `https://sraksh.github.io/rungta-registration/` (confirm the actual URL in the workflow summary; this README does not claim it is live).
+### Why Netlify rather than GitHub Pages
 
-Hash routing (`#/admin`) means reloads and deep links work on any static host with no rewrite rules. Vite `base` is `/<repo>/` on Pages and `/` elsewhere (`VITE_BASE_PATH`).
-
-### Is GitHub Pages appropriate for this data-collection workflow?
-
-**Review before launch.** GitHub's Pages documentation says Pages is not intended for sites primarily facilitating commercial transactions and advises against using it for sensitive transactions such as passwords or payment card numbers. *(I could not retrieve the live page during development, so this is from memory — read the current wording at docs.github.com → Pages → “GitHub Pages limits” and “What is GitHub Pages?”.)*
-
-How this project relates to that guidance:
-- The Pages site serves **static files only**. Student names, mobile numbers and payment screenshots are sent directly to Supabase over HTTPS and never touch GitHub; no personal data is in the repository or the build.
-- Payment itself happens in the student's own UPI app; the site never handles card numbers or passwords from students. Admins sign in through Supabase Auth.
-- This is a small non-profit event registration, but the site does collect payment *proof*, so the judgement of whether that fits GitHub's terms is yours to make.
-
-**If you want to avoid any doubt, use another static host** and keep the code on GitHub: build with `VITE_BASE_PATH=/ npm run build` and publish `dist/` on Cloudflare Pages, Netlify or similar (all support static sites with no configuration for hash routes). Then set `ALLOWED_ORIGINS` to that site's origin. If you do, delete the `deploy` job from the workflow.
+GitHub's Pages terms discourage sites that facilitate commercial transactions or handle sensitive transactions, and this app collects payment proof. *(I could not retrieve GitHub's live page during development; check the current wording yourself.)* Netlify serves the same static files. In both cases student data goes straight to Supabase and never touches the host or the repository.
 
 ## Configuring the event (admin → Settings)
 
@@ -146,7 +142,8 @@ Exports (CSV and Excel) follow the active filters. Internal notes are excluded u
 src/                       React app (pages/, admin/, components/, lib/)
 supabase/migrations/       versioned SQL: schema, RLS/grants, functions, storage
 supabase/functions/        register · admin · cleanup (+ _shared handlers, validation, schedule)
-.github/workflows/         deploy.yml (lint → typecheck → build → Pages)
+.github/workflows/         checks.yml (lint → typecheck → build)
+netlify.toml               Netlify build + security headers
 docs/ORGANISER_CHECKLIST.md
 ```
 
@@ -156,7 +153,7 @@ docs/ORGANISER_CHECKLIST.md
 
 Honest account of what was and was not checked while building this:
 
-**Run and passing:** `eslint .` (0 problems), `tsc --noEmit` (0 errors), `vite build` with `VITE_BASE_PATH=/rungta-registration/` (asset URLs correctly prefixed; the admin code is a separate lazy chunk; no secret key in the output). All six migrations were applied in order to a scratch **PostgreSQL 16** server (with stand-ins for Supabase's `auth`/`storage` schemas). On it, `admin_update_config` with a school list worked (case-insensitive de-duplication; removed schools deactivated; audit rows written), and the `anon` role could call `get_public_config()` but was denied `registrations` and `admin_stats`. These were manual SQL checks, not a kept test suite. An earlier one-off check also ran the real admin handler against an in-process PGlite database.
+**Run and passing:** `eslint .` (0 problems), `tsc --noEmit` (0 errors), `vite build` (checked with a `/rungta-registration/` sub-path; Netlify uses `/`; asset URLs are correctly prefixed; the admin code is a separate lazy chunk; no secret key in the output). All six migrations were applied in order to a scratch **PostgreSQL 16** server (with stand-ins for Supabase's `auth`/`storage` schemas). On it, `admin_update_config` with a school list worked (case-insensitive de-duplication; removed schools deactivated; audit rows written), and the `anon` role could call `get_public_config()` but was denied `registrations` and `admin_stats`. These were manual SQL checks, not a kept test suite. An earlier one-off check also ran the real admin handler against an in-process PGlite database.
 
 **Not done / not verified:**
 - **No automated tests exist.** Unit, integration and Playwright end-to-end tests were skipped at the project owner's request, so none of the reliability scenarios in the original specification (idempotent retries, upload-then-DB-failure, concurrent IDs, forged class/shift, spoofed files, auth denial, CSV injection, mobile layout) have been demonstrated by tests. The code was written to handle them (see Architecture) but treat that as unproven.
