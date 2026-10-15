@@ -1,0 +1,19 @@
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+*.log
+
+# Secrets and local configuration — never commit these.
+.env
+.env.*
+!.env.example
+supabase/.env
+supabase/.temp/
+supabase/.branches/
+
+# Never commit real data.
+*.dump
+*.sql.gz
+*.backup

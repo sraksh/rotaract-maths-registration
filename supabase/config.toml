@@ -1,0 +1,30 @@
+# Supabase project configuration (used by the Supabase CLI for local development
+# and for `supabase functions deploy`). Hosted-project Auth settings are NOT
+# applied from this file; see README "Supabase project setup" for the dashboard steps.
+#
+# NOTE: this file was written by hand and has not been validated with a Supabase CLI
+# in this repository's development environment. If `supabase start` complains about
+# a key, run `supabase init` in a scratch directory and compare.
+
+project_id = "rungta-registration"
+
+[auth]
+# Administrators are provisioned by an operator; nobody can sign up through the app.
+enable_signup = false
+
+[auth.email]
+enable_signup = false
+enable_confirmations = true
+
+# The public registration endpoint is intentionally anonymous. The admin endpoint
+# verifies the user's access token itself (and checks admin_users) on every call.
+# Both set verify_jwt = false so they work with the new publishable/secret API keys
+# and asymmetric JWT signing keys.
+[functions.register]
+verify_jwt = false
+
+[functions.admin]
+verify_jwt = false
+
+[functions.cleanup]
+verify_jwt = false
