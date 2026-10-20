@@ -96,7 +96,7 @@ The site is hosted on **Netlify** (static site); the code lives on GitHub (owner
 
 1. **Push to GitHub** (from a computer logged in to your account):
    ```bash
-   gh repo create sraksh/rungta-registration --private --source=. --push
+   gh repo create sraksh/rotaract-maths-registration --private --source=. --push
    ```
    (Netlify works with private repos. GitHub Pages is no longer used.)
 2. **Netlify → Add new site → Import an existing project → GitHub →** pick the repo. Build command `npm run build`, publish directory `dist` (already in `netlify.toml`).

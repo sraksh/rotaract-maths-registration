@@ -6,7 +6,7 @@
 # in this repository's development environment. If `supabase start` complains about
 # a key, run `supabase init` in a scratch directory and compare.
 
-project_id = "rungta-registration"
+project_id = "rotaract-maths-registration"
 
 [auth]
 # Administrators are provisioned by an operator; nobody can sign up through the app.
