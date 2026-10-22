@@ -18,6 +18,7 @@ export type ErrorCode =
   | 'STATUS_CONFLICT'
   | 'NO_CHANGE'
   | 'NOT_READY'
+  | 'ADMIT_CARD_NOT_AVAILABLE'
   | 'UNAVAILABLE'
   | 'INTERNAL';
 
@@ -39,6 +40,7 @@ export const HTTP_STATUS: Record<ErrorCode, number> = {
   STATUS_CONFLICT: 409,
   NO_CHANGE: 409,
   NOT_READY: 409,
+  ADMIT_CARD_NOT_AVAILABLE: 409,
   UNAVAILABLE: 503,
   INTERNAL: 500,
 };
@@ -63,6 +65,7 @@ export const DEFAULT_MESSAGES: Record<ErrorCode, string> = {
   STATUS_CONFLICT: 'This record was changed by someone else. The latest data has been loaded; please review and retry.',
   NO_CHANGE: 'The record is already in that state.',
   NOT_READY: 'Complete the required payment details before opening registration.',
+  ADMIT_CARD_NOT_AVAILABLE: 'Your admit card is not available yet.',
   UNAVAILABLE: 'The service is temporarily unavailable. Your details are safe in the form; please try again in a moment.',
   INTERNAL: 'Something went wrong on our side. Please try again.',
 };

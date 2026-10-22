@@ -167,3 +167,19 @@ export interface ExportResult {
   total: number;
   truncated: boolean;
 }
+
+export interface AdmitCard {
+  registrationId: string;
+  fullName: string;
+  schoolName: string;
+  rollNumber: string;
+  classLevel: number;
+  shift: number;
+  examDate: string;
+  examStart: string;
+  examEnd: string;
+  reportingTime: string;
+  eventName: string;
+  organiser: string;
+  venue: string;
+}

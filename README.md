@@ -136,6 +136,16 @@ Dashboard (live counts, by class, by school, needs-attention) · Registrations (
 
 Exports (CSV and Excel) follow the active filters. Internal notes are excluded unless “Include internal notes” is ticked. CSV cells starting with `= + - @`, tab or CR are prefixed with `'`; Excel files store every value as a text cell; the mobile number is exported as 10 digits. Exports are audit-logged. Limit: 20,000 rows per export (the UI warns if truncated).
 
+## Admit cards (student download)
+
+Students open `#/admit-card`, enter their **registration ID + mobile number**, and get a printable A4 admit card (name, school, roll number, class/shift, exam date and time, reporting time, centre, QR code of the registration ID, instructions). Use the browser's Print → *Save as PDF* for a file.
+
+- Available **only when** the payment is *verified* and the centre is marked *final* in Settings; otherwise the student sees a clear "not available yet" reason.
+- A wrong ID or mobile gives one generic "no match" answer (no way to probe which registrations exist). Lookups are rate limited per IP (`RATE_LIMIT_ADMIT_PER_10_MIN`, default 15).
+- The card shows only its own printed fields; the mobile number is not returned.
+- **Edit the instructions** in `src/pages/AdmitCardPage.tsx` (`ADMIT_CARD_INSTRUCTIONS`) to match the organisers' real rules before issuing cards.
+- Deploying this feature needs migration `20261022000700_admit_card.sql` applied **and** the `register` function redeployed.
+
 ## Repository layout
 
 ```
@@ -154,6 +164,8 @@ docs/ORGANISER_CHECKLIST.md
 Honest account of what was and was not checked while building this:
 
 **Run and passing:** `eslint .` (0 problems), `tsc --noEmit` (0 errors), `vite build` (checked with a `/rungta-registration/` sub-path; Netlify uses `/`; asset URLs are correctly prefixed; the admin code is a separate lazy chunk; no secret key in the output). All six migrations were applied in order to a scratch **PostgreSQL 16** server (with stand-ins for Supabase's `auth`/`storage` schemas). On it, `admin_update_config` with a school list worked (case-insensitive de-duplication; removed schools deactivated; audit rows written), and the `anon` role could call `get_public_config()` but was denied `registrations` and `admin_stats`. These were manual SQL checks, not a kept test suite. An earlier one-off check also ran the real admin handler against an in-process PGlite database.
+
+The admit-card database function was also checked manually on PostgreSQL 16: wrong mobile and unknown ID give the same `NOT_FOUND`; pending payment, and verified-but-centre-not-final, each return a specific "not available" reason; verified + final returns the card; `anon` is denied. The admit-card page itself has not been viewed in a browser or print preview.
 
 **Not done / not verified:**
 - **No automated tests exist.** Unit, integration and Playwright end-to-end tests were skipped at the project owner's request, so none of the reliability scenarios in the original specification (idempotent retries, upload-then-DB-failure, concurrent IDs, forged class/shift, spoofed files, auth denial, CSV injection, mobile layout) have been demonstrated by tests. The code was written to handle them (see Architecture) but treat that as unproven.

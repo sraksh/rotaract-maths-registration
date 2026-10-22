@@ -14,9 +14,9 @@ import { AppError, type ErrorCode } from './errors.ts';
 import { MAX_PROOF_BYTES, detectImageType, validateDeclaredFile, type DeclaredFile } from './files.ts';
 import { canonicalJson, sha256Hex } from './hash.ts';
 import { createHandler, readJsonObject, withAppErrors, type RequestContext } from './http.ts';
-import type { InitUploadResult, PublicConfig, Receipt, SubmitResult } from './api.ts';
+import type { AdmitCard, InitUploadResult, PublicConfig, Receipt, SubmitResult } from './api.ts';
 import type { HandlerDeps, RpcClient } from './types.ts';
-import { isUuid, validateRegistrationInput } from './validation.ts';
+import { isUuid, normalizeIndianMobile, validateRegistrationInput } from './validation.ts';
 
 type DbFailure = { ok: false; code: string };
 
@@ -26,6 +26,8 @@ function failureToError(code: string): AppError {
       return new AppError('VALIDATION_FAILED', undefined, {
         fields: { classShift: 'The selected shift does not match the class. Please choose again.' },
       });
+    case 'NOT_FOUND':
+      return new AppError('NOT_FOUND', 'No registration matches that registration ID and mobile number. Please check both and try again.');
     case 'REGISTRATION_CLOSED':
     case 'NOT_CONFIGURED':
     case 'UPLOAD_SESSION_INVALID':
@@ -183,6 +185,40 @@ async function submit(deps: HandlerDeps, db: RpcClient, body: Record<string, unk
   return { registration: res.registration, replayed: res.replayed };
 }
 
+const REGISTRATION_ID_RE = /^PRM34-[0-9A-F]{10}$/;
+
+const ADMIT_REASONS: Record<string, string> = {
+  payment_pending: 'Your payment has not been verified yet. The admit card becomes available once the organising team verifies it. Please check again later.',
+  payment_rejected: 'Your payment proof could not be verified. Please contact the organising team.',
+  centre_unconfirmed: 'The examination centre has not been finalised yet. Your admit card will be available once it is confirmed.',
+};
+
+/**
+ * Admit card lookup. Requires registration ID AND mobile number; returns only the
+ * printed card fields, only for verified payments and a confirmed centre.
+ */
+async function admitCard(deps: HandlerDeps, db: RpcClient, body: Record<string, unknown>, ctx: RequestContext): Promise<AdmitCard> {
+  await enforceRateLimit(deps, db, ctx, 'admit', deps.config.rateLimitAdmitPer10Min);
+
+  const fields: Record<string, string> = {};
+  const id = typeof body.registrationId === 'string' ? body.registrationId.trim().toUpperCase() : '';
+  if (!REGISTRATION_ID_RE.test(id)) fields.registrationId = 'Enter your registration ID, for example PRM34-3F9A07C1D2.';
+  const mobile = typeof body.mobile === 'string' ? normalizeIndianMobile(body.mobile) : null;
+  if (!mobile) fields.mobile = 'Enter the 10-digit mobile number used while registering.';
+  if (Object.keys(fields).length > 0 || !mobile) throw new AppError('VALIDATION_FAILED', undefined, { fields });
+
+  const res = await db.rpc<{ ok: true; card: AdmitCard } | { ok: false; code: string; reason?: string }>('get_admit_card', {
+    registration_id: id,
+    mobile,
+  });
+  if (res.ok) return res.card;
+  if (res.code === 'ADMIT_CARD_NOT_AVAILABLE') {
+    const reason = res.reason ?? '';
+    throw new AppError('ADMIT_CARD_NOT_AVAILABLE', ADMIT_REASONS[reason], { details: { reason } });
+  }
+  throw failureToError(res.code);
+}
+
 export function createRegisterHandler(deps: HandlerDeps): (req: Request) => Promise<Response> {
   const db = withAppErrors(deps.db);
   return createHandler(deps, 'register', async (req, ctx) => {
@@ -195,6 +231,10 @@ export function createRegisterHandler(deps: HandlerDeps): (req: Request) => Prom
     if (action === 'submit') {
       ctx.action = 'submit';
       return submit(deps, db, body, ctx);
+    }
+    if (action === 'admit-card') {
+      ctx.action = 'admit-card';
+      return admitCard(deps, db, body, ctx);
     }
     throw new AppError('INVALID_REQUEST');
   });

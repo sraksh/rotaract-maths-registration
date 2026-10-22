@@ -34,6 +34,7 @@ export function Confirmation({ receipt, config }: { receipt: Receipt; config: Pu
           <div><dt>Payment status</dt><dd><span className={`badge badge-${receipt.paymentStatus}`}>{statusLabel(receipt.paymentStatus)}</span></dd></div>
           <div><dt>Submitted</dt><dd>{formatDateTimeIST(receipt.createdAt)}</dd></div>
         </dl>
+        <p>Once the organisers verify your payment, you can <a href="#/admit-card">download your admit card</a> using your registration ID and mobile number.</p>
         <p className="hint">Keep your registration ID safe — the organisers may ask for it. You can close this page.</p>
       </section>
     </main>

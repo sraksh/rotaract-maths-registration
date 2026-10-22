@@ -24,12 +24,16 @@ Tick everything before turning registration on. The Settings page also lists mis
 - [ ] Netlify site connected to the repo; env vars `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` set; deploy succeeded
 - [ ] `ALLOWED_ORIGINS` secret set to the Netlify site's origin
 
+- [ ] **Admit card instructions** agreed and edited in `src/pages/AdmitCardPage.tsx`
+- [ ] Tell students when admit cards open (after payment verification and centre confirmation) and where: `<site>/#/admit-card`
+
 ## Dry run (staging or production with registration still closed → then open briefly)
 - [ ] Register one student in each of Class 7, 8, 9, 10 on a real phone; check the confirmation shows the right shift and reporting time
 - [ ] Try submitting twice quickly, with a wrong file type, and with a file over 5 MB
 - [ ] As admin: open a registration, view the proof, reject without a reason (should be refused), reject with a reason, then verify
 - [ ] Export CSV and Excel; open in Excel; check leading zeros in roll numbers and that notes are absent
 - [ ] Print a class-wise and a school-wise list
+- [ ] Verify a test registration, mark the centre final, then download its admit card with the ID + mobile and print/save it as PDF
 - [ ] Confirm a non-admin account cannot see anything at `#/admin`
 - [ ] Delete the test registrations (SQL editor) before the real launch
 

@@ -3,6 +3,7 @@ import { usePath } from './lib/router';
 import { backendConfigured, secretKeyDetected } from './lib/env';
 import { RegisterPage } from './pages/RegisterPage';
 // The admin area (tables, export code) is only downloaded when /admin is opened.
+const AdmitCardPage = lazy(() => import('./pages/AdmitCardPage').then((m) => ({ default: m.AdmitCardPage })));
 const AdminApp = lazy(() => import('./admin/AdminApp').then((m) => ({ default: m.AdminApp })));
 
 function SetupNotice({ secret }: { secret: boolean }) {
@@ -23,21 +24,25 @@ function SetupNotice({ secret }: { secret: boolean }) {
 export function App() {
   const path = usePath();
   const isAdmin = path === '/admin' || path.startsWith('/admin/');
+  const isAdmit = path === '/admit-card';
 
   useEffect(() => {
     window.scrollTo(0, 0);
     document.title = isAdmin
       ? 'Admin — Rungta Mathematics Competition 2026'
-      : 'Registration — 34th Padmabai Rungta Mathematics Competition 2026';
-  }, [path, isAdmin]);
+      : isAdmit
+        ? 'Admit card — 34th Padmabai Rungta Mathematics Competition 2026'
+        : 'Registration — 34th Padmabai Rungta Mathematics Competition 2026';
+  }, [path, isAdmin, isAdmit]);
 
   if (secretKeyDetected) return <SetupNotice secret />;
   if (!backendConfigured) return <SetupNotice secret={false} />;
-  return isAdmin ? (
-    <Suspense fallback={<main className="shell"><p className="card" role="status">Loading…</p></main>}>
-      <AdminApp path={path} />
-    </Suspense>
-  ) : (
-    <RegisterPage />
-  );
+  if (isAdmin || isAdmit) {
+    return (
+      <Suspense fallback={<main className="shell"><p className="card" role="status">Loading…</p></main>}>
+        {isAdmin ? <AdminApp path={path} /> : <AdmitCardPage />}
+      </Suspense>
+    );
+  }
+  return <RegisterPage />;
 }

@@ -49,6 +49,7 @@ export interface HandlerConfig {
   uploadTtlSeconds: number;
   rateLimitInitPer10Min: number;
   rateLimitSubmitPer10Min: number;
+  rateLimitAdmitPer10Min: number;
   /** Shared secret for the scheduled cleanup function. */
   cleanupSecret: string;
 }
@@ -70,4 +71,5 @@ export const DEFAULT_CONFIG: Omit<HandlerConfig, 'ipHashSalt' | 'cleanupSecret' 
   uploadTtlSeconds: 3600,
   rateLimitInitPer10Min: 30,
   rateLimitSubmitPer10Min: 30,
+  rateLimitAdmitPer10Min: 15,
 };

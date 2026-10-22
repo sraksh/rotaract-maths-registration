@@ -2,6 +2,7 @@
 import type { ApiErrorBody, ErrorCode } from '../../supabase/functions/_shared/errors.ts';
 import type {
   AdminConfig,
+  AdmitCard,
   ExportResult,
   InitUploadResult,
   ListResult,
@@ -102,6 +103,10 @@ export function submitRegistration(body: {
   registration: Record<string, unknown>;
 }): Promise<SubmitResult> {
   return callFunction('register', { action: 'submit', ...body });
+}
+
+export function fetchAdmitCard(registrationId: string, mobile: string): Promise<AdmitCard> {
+  return callFunction('register', { action: 'admit-card', registrationId, mobile });
 }
 
 export function publicQrUrl(path: string): string {

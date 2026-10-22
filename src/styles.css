@@ -140,6 +140,10 @@ td.num, th.num { text-align: right; }
 }
 
 @media print {
+  @page { size: A4; margin: 12mm; }
+  .admit-card { border: 2px solid #000; break-inside: avoid; margin: 0; max-width: none; }
+  .shell { max-width: none; padding: 0; }
+  .admit-body { grid-template-columns: 1fr 190px; }
   body { background: #fff; color: #000; }
   .no-print, .admin-bar { display: none !important; }
   .admin-main { padding: 0; max-width: none; }
@@ -149,4 +153,18 @@ td.num, th.num { text-align: right; }
   tr { break-inside: avoid; }
   a { color: inherit; text-decoration: none; }
 }
+/* ------- admit card ------- */
+.admit-card { background: #fff; color: #1f1b2e; border: 2px solid #5b3cc4; border-radius: var(--radius); padding: 16px; margin: 16px 0; max-width: 780px; }
+.admit-card header { text-align: center; border-bottom: 1px solid #d6d0e8; padding-bottom: 8px; margin-bottom: 8px; }
+.admit-card h2 { margin: 4px 0; font-size: 1.15rem; }
+.admit-card h3 { font-size: 1rem; margin: 12px 0 4px; }
+.admit-card .hint, .admit-card dt { color: #5d5873; }
+.admit-title { margin: 6px 0 0; font-weight: 700; letter-spacing: .2em; color: #5b3cc4; }
+.admit-body { display: grid; gap: 16px; grid-template-columns: 1fr; }
+.admit-id { text-align: center; }
+.qr-box { width: 150px; margin: 0 auto 6px; }
+.qr-box svg { width: 100%; height: auto; display: block; }
+.admit-card code { background: #ece7fb; color: #1f1b2e; font-size: 1.05rem; font-weight: 700; }
+@media (min-width: 700px) { .admit-body { grid-template-columns: 1fr 190px; } }
+
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

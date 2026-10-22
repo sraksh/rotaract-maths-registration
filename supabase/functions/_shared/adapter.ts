@@ -110,6 +110,7 @@ export function loadHandlerConfig(get: (key: string) => string | undefined): Han
     cleanupSecret: get('CLEANUP_SECRET') ?? '',
     rateLimitInitPer10Min: num('RATE_LIMIT_INIT_PER_10_MIN', DEFAULT_CONFIG.rateLimitInitPer10Min),
     rateLimitSubmitPer10Min: num('RATE_LIMIT_SUBMIT_PER_10_MIN', DEFAULT_CONFIG.rateLimitSubmitPer10Min),
+    rateLimitAdmitPer10Min: num('RATE_LIMIT_ADMIT_PER_10_MIN', DEFAULT_CONFIG.rateLimitAdmitPer10Min),
   };
 }
 

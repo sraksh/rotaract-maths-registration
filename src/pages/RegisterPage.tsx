@@ -71,6 +71,8 @@ export function RegisterPage() {
         )}
       </header>
 
+      <p className="hint">Already registered? <a href="#/admit-card">Download your admit card</a> (available after your payment is verified).</p>
+
       {loadError && (
         <div className="card" role="alert">
           <p>{loadError}</p>
