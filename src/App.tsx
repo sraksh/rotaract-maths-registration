@@ -29,7 +29,7 @@ export function App() {
   useEffect(() => {
     window.scrollTo(0, 0);
     document.title = isAdmin
-      ? 'Admin — Rungta Mathematics Competition 2026'
+      ? 'Admin — Rotaract Maths Registration 2026'
       : isAdmit
         ? 'Admit card — 34th Padmabai Rungta Mathematics Competition 2026'
         : 'Registration — 34th Padmabai Rungta Mathematics Competition 2026';

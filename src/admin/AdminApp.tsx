@@ -147,7 +147,7 @@ export function AdminApp({ path }: { path: string }) {
     <AdminContext.Provider value={ctx}>
       <div className="admin">
         <header className="admin-bar no-print">
-          <strong>Rungta Maths 2026 · Admin</strong>
+          <strong>Rotaract Maths 2026 · Admin</strong>
           <nav aria-label="Admin sections">
             {nav.map(([to, label]) => (
               <a key={to} href={`#${to}`} aria-current={active(to) ? 'page' : undefined}>{label}</a>
